@@ -36,7 +36,7 @@ $YOUR_IP being added to access control list
 
 ```
 docker run -itd  \
-       -e DISPLAY=$YOUR_IP \
+       -e DISPLAY=$YOUR_IP:0 \
        -v /tmp/.X11-unix:/tmp/.X11-unix \
        -v /var/run/docker.sock:/var/run/docker.sock \
        --name devtools \
