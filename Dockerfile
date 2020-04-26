@@ -15,7 +15,8 @@ RUN apt-get install -y sudo && \
 
 RUN wget https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-20.0.0/graalvm-ce-java11-linux-amd64-20.0.0.tar.gz -O /tmp/graalvm.tar.gz && \
 	tar -xzvf /tmp/graalvm.tar.gz -C /opt  && \
-	mv /opt/graalvm* /opt/graalvm
+	mv /opt/graalvm* /opt/graalvm && \
+	/opt/graalvm/bin/gu install native-image
 ENV JAVA_HOME=/opt/graalvm
 ENV PATH="${PATH}:${JAVA_HOME}/bin"
 
@@ -38,6 +39,9 @@ RUN wget https://services.gradle.org/distributions/gradle-6.3-bin.zip -O /tmp/gr
 	mv /opt/gradle* /opt/gradle
 ENV GRADLE_HOME=/opt/gradle
 ENV PATH="${PATH}:${GRADLE_HOME}/bin"
+
+RUN wget https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 -O /opt/minikube \
+  && chmod +x /opt/minikube
 
 COPY files/devtools-configure.sh /usr/bin/devtools-configure
 
