@@ -9,6 +9,9 @@ RUN apt-get install -y sudo && \
 	apt-get install -y unzip && \
 	apt-get install -y jq && \
 	apt-get install -y software-properties-common && \
+	apt-get install -y net-tools && \
+	apt-get install -y build-essential && \
+	apt-get install -y zlib1g-dev && \
 	apt-get install -y git && \
 	apt-get install -y docker.io && \
 	apt-get install -y firefox
