@@ -14,7 +14,12 @@ RUN apt-get install -y sudo && \
 	apt-get install -y zlib1g-dev && \
 	apt-get install -y git && \
 	apt-get install -y docker.io && \
-	apt-get install -y firefox
+	apt-get install -y firefox && \
+	apt-get install -y apt-transport-https && \
+    apt-get install -y ca-certificates && \
+    apt-get install -y curl && \
+    apt-get install -y lxc && \
+    apt-get install -y iptables
 
 RUN wget https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-20.0.0/graalvm-ce-java11-linux-amd64-20.0.0.tar.gz -O /tmp/graalvm.tar.gz && \
 	tar -xzvf /tmp/graalvm.tar.gz -C /opt  && \
@@ -43,20 +48,33 @@ RUN wget https://services.gradle.org/distributions/gradle-6.3-bin.zip -O /tmp/gr
 ENV GRADLE_HOME=/opt/gradle
 ENV PATH="${PATH}:${GRADLE_HOME}/bin"
 
-RUN wget https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 -O /opt/minikube \
-  && chmod +x /opt/minikube
+VOLUME /var/lib/docker
+ADD ./files/devtools-entrypoint.sh \
+ 	./files/wrapdocker.sh \
+	/usr/local/bin/
+RUN chmod +x /usr/local/bin/devtools-entrypoint.sh && \
+	chmod +x /usr/local/bin/wrapdocker.sh
 
-COPY files/devtools-configure.sh /usr/bin/devtools-configure
+# Minikube
+RUN wget https://storage.googleapis.com/kubernetes-release/release/v1.18.2/bin/linux/amd64/kubectl -O /tmp/kubectl && \
+	chmod +x /tmp/kubectl && \
+	mv /tmp/kubectl /usr/local/bin/kubectl && \
+	wget https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 -O /opt/minikube && \
+    chmod +x /opt/minikube && \
+    install /opt/minikube /usr/local/bin/
+
+RUN useradd -ms /bin/bash developer && \
+	echo developer:developer | chpasswd && \
+	usermod -a -G sudo,docker developer
 
 #Cleanning temporary files
 RUN rm -rf /tmp/* && \
 	apt-get autoclean && \
 	apt-get clean
 
-RUN useradd -ms /bin/bash developer && \
-	echo developer:developer | chpasswd && \
-	usermod -a -G sudo,docker developer
 USER developer
 ENV HOME /home/developer
 WORKDIR ${HOME}
+
+ENTRYPOINT ["devtools-entrypoint.sh"]
 CMD /bin/bash
