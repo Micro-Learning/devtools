@@ -1,9 +1,8 @@
 FROM ubuntu:19.10
 
-RUN apt-get update
-
 #Adding linux softwares
-RUN apt-get install -y sudo && \
+RUN apt-get update && \
+	apt-get install -y sudo && \
 	apt-get install -y wget && \
 	apt-get install -y vim && \
 	apt-get install -y unzip && \
