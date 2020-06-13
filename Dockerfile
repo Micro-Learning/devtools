@@ -2,37 +2,44 @@ FROM ubuntu:19.10
 
 #Adding linux softwares
 RUN apt-get update && \
-	apt-get install -y sudo && \
-	apt-get install -y wget && \
-	apt-get install -y vim && \
-	apt-get install -y unzip && \
-	apt-get install -y jq && \
-	apt-get install -y software-properties-common && \
-	apt-get install -y net-tools && \
-	apt-get install -y build-essential && \
-	apt-get install -y zlib1g-dev && \
-	apt-get install -y git && \
-	apt-get install -y docker.io && \
-	apt-get install -y firefox && \
-	apt-get install -y apt-transport-https && \
-    apt-get install -y ca-certificates && \
-    apt-get install -y curl && \
-    apt-get install -y lxc && \
-    apt-get install -y iptables
+	apt-get install -y \
+		sudo \
+		wget \
+		vim \
+		unzip \
+		jq \
+		software-properties-common \
+		net-tools \
+		build-essential \
+		zlib1g-dev \
+		git \
+		docker.io \
+		firefox \
+		apt-transport-https \
+		ca-certificates \
+		curl \
+		lxc \
+		iptables && \
+		apt-get autoclean && \
+		apt-get clean && \
+		rm -rf /var/lib/apt/lists
 
-RUN wget https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-20.0.0/graalvm-ce-java11-linux-amd64-20.0.0.tar.gz -O /tmp/graalvm.tar.gz && \
-	tar -xzvf /tmp/graalvm.tar.gz -C /opt  && \
-	mv /opt/graalvm* /opt/graalvm && \
-	/opt/graalvm/bin/gu install native-image
-ENV JAVA_HOME=/opt/graalvm
-ENV PATH="${PATH}:${JAVA_HOME}/bin"
+COPY --from=oracle/graalvm-ce:20.1.0-java11 /opt/graalvm* /opt/graalvm
 
+# Build tools
 RUN wget http://ftp.unicamp.br/pub/apache/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz -O /tmp/maven.tar.gz && \
 	tar -xzvf /tmp/maven.tar.gz -C /opt && \
-	mv /opt/apache-maven* /opt/maven
+	mv /opt/apache-maven* /opt/maven && \
+	wget https://services.gradle.org/distributions/gradle-6.3-bin.zip -O /tmp/gradle.zip && \
+	unzip /tmp/gradle.zip -d /opt && \
+	mv /opt/gradle* /opt/gradle
+
 ENV M2_HOME=/opt/maven
 ENV PATH="${PATH}:${M2_HOME}/bin"
+ENV GRADLE_HOME=/opt/gradle
+ENV PATH="${PATH}:${GRADLE_HOME}/bin"
 
+# IntelliJ
 RUN wget https://download.jetbrains.com/idea/ideaIU-2019.3.4-no-jbr.tar.gz -O /tmp/idea.tar.gz && \
 	tar -xzvf /tmp/idea.tar.gz -C /opt && \
     mv /opt/idea* /opt/idea && \
@@ -40,12 +47,6 @@ RUN wget https://download.jetbrains.com/idea/ideaIU-2019.3.4-no-jbr.tar.gz -O /t
     sed -i '/.*UseConcMarkSweepGC/d' /opt/idea/bin/idea64.vmoptions
 ENV IDEA_HOME=/opt/idea
 ENV PATH="${PATH}:${IDEA_HOME}/bin"
-
-RUN wget https://services.gradle.org/distributions/gradle-6.3-bin.zip -O /tmp/gradle.zip && \
-	unzip /tmp/gradle.zip -d /opt && \
-	mv /opt/gradle* /opt/gradle
-ENV GRADLE_HOME=/opt/gradle
-ENV PATH="${PATH}:${GRADLE_HOME}/bin"
 
 VOLUME /var/lib/docker
 ADD ./files/devtools-entrypoint.sh \
@@ -67,9 +68,7 @@ RUN useradd -ms /bin/bash developer && \
 	usermod -a -G sudo,docker developer
 
 #Cleanning temporary files
-RUN rm -rf /tmp/* && \
-	apt-get autoclean && \
-	apt-get clean
+RUN rm -rf /tmp/*
 
 USER developer
 ENV HOME /home/developer
